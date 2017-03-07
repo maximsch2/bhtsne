@@ -155,14 +155,14 @@ int TSNE<T, OUTDIM>::run(T* X, int N, int D, T* Y, T perplexity, T theta, int ra
         // Symmetrize input similarities
         symmetrizeMatrix(&row_P, &col_P, &val_P, N);
         T sum_P = .0;
-        for(int i = 0; i < row_P[N]; i++) sum_P += val_P[i];
-        for(int i = 0; i < row_P[N]; i++) val_P[i] /= sum_P;
+        for(int i = 0; i < (int)row_P[N]; i++) sum_P += val_P[i];
+        for(int i = 0; i < (int)row_P[N]; i++) val_P[i] /= sum_P;
     }
     end = clock();
 
     // Lie about the P-values
     if(exact) { for(int i = 0; i < N * N; i++)        P[i] *= 12.0; }
-    else {      for(int i = 0; i < row_P[N]; i++) val_P[i] *= 12.0; }
+    else {      for(int i = 0; i < (int)row_P[N]; i++) val_P[i] *= 12.0; }
 
 	// Initialize solution (randomly)
   if (skip_random_init != true) {
@@ -196,7 +196,7 @@ int TSNE<T, OUTDIM>::run(T* X, int N, int D, T* Y, T perplexity, T theta, int ra
         // Stop lying about the P-values after a while, and switch momentum
         if(iter == stop_lying_iter) {
             if(exact) { for(int i = 0; i < N * N; i++)        P[i] /= 12.0; }
-            else      { for(int i = 0; i < row_P[N]; i++) val_P[i] /= 12.0; }
+            else      { for(int i = 0; i < (int)row_P[N]; i++) val_P[i] /= 12.0; }
         }
         if(iter == mom_switch_iter) momentum = final_momentum;
 
@@ -374,7 +374,7 @@ T TSNE<T, OUTDIM>::evaluateError(unsigned int* row_P, unsigned int* col_P, T* va
     T C = .0, Q;
     for(int n = 0; n < N; n++) {
         ind1 = n * OUTDIM;
-        for(int i = row_P[n]; i < row_P[n + 1]; i++) {
+        for(int i = row_P[n]; i < (int)row_P[n + 1]; i++) {
             Q = .0;
             ind2 = col_P[i] * OUTDIM;
             for(int d = 0; d < OUTDIM; d++) buff[d]  = Y[ind1 + d];
@@ -553,8 +553,8 @@ void TSNE<T, OUTDIM>::computeGaussianPerplexity(T* X, int N, int D, unsigned int
         }
 
         // Row-normalize current row of P and store in matrix
-        for(unsigned int m = 0; m < K; m++) cur_P[m] /= sum_P;
-        for(unsigned int m = 0; m < K; m++) {
+        for(int m = 0; m < K; m++) cur_P[m] /= sum_P;
+        for(int m = 0; m < K; m++) {
             col_P[row_P[n] + m] = (unsigned int) indices[m + 1].index();
             val_P[row_P[n] + m] = cur_P[m];
         }
@@ -580,12 +580,12 @@ void TSNE<T, OUTDIM>::symmetrizeMatrix(unsigned int** _row_P, unsigned int** _co
     int* row_counts = (int*) calloc(N, sizeof(int));
     if(row_counts == NULL) { printf("Memory allocation failed!\n"); exit(1); }
     for(int n = 0; n < N; n++) {
-        for(int i = row_P[n]; i < row_P[n + 1]; i++) {
+        for(int i = row_P[n]; i < (int)row_P[n + 1]; i++) {
 
             // Check whether element (col_P[i], n) is present
             bool present = false;
-            for(int m = row_P[col_P[i]]; m < row_P[col_P[i] + 1]; m++) {
-                if(col_P[m] == n) present = true;
+            for(int m = row_P[col_P[i]]; m < (int)row_P[col_P[i] + 1]; m++) {
+                if((int)col_P[m] == n) present = true;
             }
             if(present) row_counts[n]++;
             else {
@@ -616,9 +616,9 @@ void TSNE<T, OUTDIM>::symmetrizeMatrix(unsigned int** _row_P, unsigned int** _co
             // Check whether element (col_P[i], n) is present
             bool present = false;
             for(unsigned int m = row_P[col_P[i]]; m < row_P[col_P[i] + 1]; m++) {
-                if(col_P[m] == n) {
+                if((int)col_P[m] == n) {
                     present = true;
-                    if(n <= col_P[i]) {                                                 // make sure we do not add elements twice
+                    if(n <= (int)col_P[i]) {                                                 // make sure we do not add elements twice
                         sym_col_P[sym_row_P[n]        + offset[n]]        = col_P[i];
                         sym_col_P[sym_row_P[col_P[i]] + offset[col_P[i]]] = n;
                         sym_val_P[sym_row_P[n]        + offset[n]]        = val_P[i] + val_P[m];
@@ -636,9 +636,9 @@ void TSNE<T, OUTDIM>::symmetrizeMatrix(unsigned int** _row_P, unsigned int** _co
             }
 
             // Update offsets
-            if(!present || (present && n <= col_P[i])) {
+            if(!present || (present && n <= (int)col_P[i])) {
                 offset[n]++;
-                if(col_P[i] != n) offset[col_P[i]]++;
+                if((int)col_P[i] != n) offset[col_P[i]]++;
             }
         }
     }

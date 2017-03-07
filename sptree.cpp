@@ -108,11 +108,11 @@ SPTree<T, dimension>::SPTree(T* inp_data, unsigned int N)
         }
         nD += D;
     }
-    for(int d = 0; d < D; d++) mean_Y[d] /= (T) N;
+    for(int d = 0; d < (int)D; d++) mean_Y[d] /= (T) N;
 
     // Construct SPTree
     T width[dimension];
-    for(int d = 0; d < D; d++) width[d] = fmax(max_Y[d] - mean_Y[d], mean_Y[d] - min_Y[d]) + 1e-5;
+    for(int d = 0; d < (int)D; d++) width[d] = fmax(max_Y[d] - mean_Y[d], mean_Y[d] - min_Y[d]) + 1e-5;
     init(NULL, inp_data, mean_Y, width);
     fill(N);
 }
@@ -158,19 +158,19 @@ void SPTree<T, dimension>::init(SPTree<T, dimension>* inp_parent, T* inp_data, T
     parent = inp_parent;
     int D = dimension;
     no_children = 2;
-    for(unsigned int d = 1; d < D; d++) no_children *= 2;
+    for(int d = 1; d < D; d++) no_children *= 2;
     data = inp_data;
     is_leaf = true;
     size = 0;
     cum_size = 0;
 
-    for(unsigned int d = 0; d < D; d++) boundary.setCorner(d, inp_corner[d]);
-    for(unsigned int d = 0; d < D; d++) boundary.setWidth( d, inp_width[d]);
+    for(int d = 0; d < D; d++) boundary.setCorner(d, inp_corner[d]);
+    for(int d = 0; d < D; d++) boundary.setWidth( d, inp_width[d]);
 
     children = (SPTree<T, dimension>**) malloc(no_children * sizeof(SPTree<T, dimension>*));
     for(unsigned int i = 0; i < no_children; i++) children[i] = NULL;
 
-    for(unsigned int d = 0; d < D; d++) center_of_mass[d] = .0;
+    for(int d = 0; d < D; d++) center_of_mass[d] = .0;
 
 }
 
@@ -389,7 +389,7 @@ template<typename T, int dimension>
 void SPTree<T, dimension>::computeEdgeForces(unsigned int* row_P, unsigned int* col_P, T* val_P, int N, T pos_f[]) const
 {
     #pragma omp parallel for schedule(static)
-    for(unsigned int n = 0; n < N; n++) {
+    for(int n = 0; n < N; n++) {
         unsigned int ind1 = n*dimension;
 
         for(unsigned int i = row_P[n]; i < row_P[n + 1]; i++) {
